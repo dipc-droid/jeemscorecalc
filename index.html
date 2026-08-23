@@ -20055,5 +20055,22 @@ function triggerToast(text, iconClass) {
     paint();
 })();
 </script>
+  <script>
+  // Disable right-click context menu
+  document.addEventListener('contextmenu', (e) => e.preventDefault());
+
+  // Block F12, Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+U
+  document.onkeydown = function(e) {
+    if (e.keyCode === 123) { // F12
+      return false;
+    }
+    if (e.ctrlKey && e.shiftKey && (e.keyCode === 73 || e.keyCode === 74 || e.keyCode === 67)) {
+      return false; // Ctrl+Shift+I / J / C
+    }
+    if (e.ctrlKey && e.keyCode === 85) { // Ctrl+U (View Source)
+      return false;
+    }
+  };
+</script>
 </body>
 </html>
