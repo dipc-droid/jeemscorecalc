@@ -1,0 +1,5 @@
+# Googlebot-Image must be allowed or the favicon never reaches search results.
+User-agent: *
+Allow: /
+
+Sitemap: https://jeemscorecalc.in/sitemap.xml
