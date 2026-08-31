@@ -5442,6 +5442,106 @@
         }
     </style>
 
+
+    <!-- Mobile Unsaved Change CURRENT badge:
+         replace OS-dependent Unicode triangle rendering with a consistent
+         desktop-style solid right-pointing triangle. Desktop is untouched. -->
+    <style>
+        @media (max-width: 767px) {
+            #nav-intercept-modal .sb-current-label {
+                font-size: 0 !important;
+                display: inline-flex !important;
+                align-items: center !important;
+                gap: 4px !important;
+            }
+
+            #nav-intercept-modal .sb-current-label::before {
+                content: "";
+                width: 0;
+                height: 0;
+                border-top: 4px solid transparent;
+                border-bottom: 4px solid transparent;
+                border-left: 6px solid currentColor;
+                flex: 0 0 auto;
+            }
+
+            #nav-intercept-modal .sb-current-label::after {
+                content: "CURRENT";
+                font-family: 'Plus Jakarta Sans', sans-serif;
+                font-size: 9.5px;
+                font-weight: 900;
+                letter-spacing: 0.05em;
+                line-height: 1;
+            }
+        }
+    </style>
+
+
+    <!-- Mobile Manual History scroll-position rail.
+         iOS may hide its native scrollbar even while the history list is scrollable. -->
+    <style>
+        @media (max-width: 767px) {
+            #history-modal > div {
+                position: relative !important;
+            }
+
+            #history-mobile-scroll-track {
+                position: absolute;
+                right: 3px;
+                top: 0;
+                bottom: 8px;
+                width: 4px;
+                z-index: 35;
+                border-radius: 999px;
+                background: rgba(92, 58, 41, 0.12);
+                pointer-events: none;
+                opacity: 0;
+                transition: opacity 0.15s ease;
+            }
+
+            #history-mobile-scroll-track.visible {
+                opacity: 1;
+            }
+
+            #history-mobile-scroll-thumb {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                min-height: 32px;
+                border-radius: 999px;
+                background: rgba(92, 58, 41, 0.72);
+                transform: translateY(0);
+                will-change: transform, height;
+            }
+
+            body.dark-mode #history-mobile-scroll-track {
+                background: rgba(255,255,255,0.13);
+            }
+
+            body.dark-mode #history-mobile-scroll-thumb {
+                background: rgba(226,232,240,0.72);
+            }
+
+            /* The two other meaningful mobile scroll surfaces don't need a full
+               custom rail, but make their touch scrolling explicit/reliable. */
+            .csel-panel.open,
+            .rpt-table-scroll {
+                -webkit-overflow-scrolling: touch;
+            }
+
+            .rpt-table-scroll {
+                touch-action: pan-x pan-y;
+            }
+        }
+
+        @media (min-width: 768px) {
+            #history-mobile-scroll-track {
+                display: none !important;
+            }
+        }
+    </style>
+
 </head>
 <body class="h-full flex flex-col justify-between text-slate-800 custom-scrollbar antialiased">
 
@@ -20638,6 +20738,90 @@ function triggerToast(text, iconClass) {
             attributeFilter: ["class"]
         });
     }
+})();
+</script>
+
+
+<script>
+/* Isolated mobile History scroll indicator.
+   No scoring, history data, modal navigation, or answer logic is changed. */
+(function initMobileHistoryScrollIndicator() {
+    const modal = document.getElementById("history-modal");
+    const scroller = document.getElementById("history-list-body");
+    if (!modal || !scroller) return;
+
+    const panel = modal.firstElementChild;
+    const header = panel ? panel.querySelector(".history-modal-head") : null;
+    if (!panel || !header) return;
+
+    let track = document.getElementById("history-mobile-scroll-track");
+    if (!track) {
+        track = document.createElement("div");
+        track.id = "history-mobile-scroll-track";
+        track.setAttribute("aria-hidden", "true");
+
+        const thumb = document.createElement("div");
+        thumb.id = "history-mobile-scroll-thumb";
+        track.appendChild(thumb);
+        panel.appendChild(track);
+    }
+
+    const thumb = document.getElementById("history-mobile-scroll-thumb");
+    let raf = 0;
+
+    function update() {
+        raf = 0;
+
+        if (window.innerWidth >= 768 || modal.classList.contains("hidden")) {
+            track.classList.remove("visible");
+            return;
+        }
+
+        const headerH = Math.ceil(header.getBoundingClientRect().height);
+        track.style.top = (headerH + 6) + "px";
+
+        const maxScroll = scroller.scrollHeight - scroller.clientHeight;
+        if (maxScroll <= 2) {
+            track.classList.remove("visible");
+            return;
+        }
+
+        const trackH = Math.max(1, track.clientHeight);
+        const ratio = Math.min(1, scroller.clientHeight / scroller.scrollHeight);
+        const thumbH = Math.max(32, Math.round(trackH * ratio));
+        const travel = Math.max(0, trackH - thumbH);
+        const progress = Math.max(0, Math.min(1, scroller.scrollTop / maxScroll));
+
+        thumb.style.height = thumbH + "px";
+        thumb.style.transform = "translateY(" + Math.round(travel * progress) + "px)";
+        track.classList.add("visible");
+    }
+
+    function scheduleUpdate() {
+        if (!raf) raf = requestAnimationFrame(update);
+    }
+
+    scroller.addEventListener("scroll", scheduleUpdate, { passive: true });
+    window.addEventListener("resize", scheduleUpdate, { passive: true });
+    window.addEventListener("orientationchange", scheduleUpdate, { passive: true });
+
+    new MutationObserver(scheduleUpdate).observe(modal, {
+        attributes: true,
+        attributeFilter: ["class"]
+    });
+
+    new MutationObserver(scheduleUpdate).observe(scroller, {
+        childList: true,
+        subtree: true
+    });
+
+    if (window.ResizeObserver) {
+        const ro = new ResizeObserver(scheduleUpdate);
+        ro.observe(scroller);
+        ro.observe(header);
+    }
+
+    scheduleUpdate();
 })();
 </script>
 
