@@ -16063,17 +16063,6 @@ function finishEnteringWorkspace() {
     document.getElementById("setup-view").classList.add("hidden");
     document.getElementById("workspace-view").classList.remove("hidden");
     pushAppNavState();
-
-    /* iPhone Chrome keeps one invisible spare same-document history entry.
-       Native Print Preview can consume the Report entry on return; this spare
-       ensures Report -> Workspace still leaves one final Back entry for the
-       existing "Reset and Re-upload PDF?" confirmation. */
-    const isIPhoneChromeBackStack = /iPhone|iPod/.test(navigator.userAgent) &&
-        /CriOS\//.test(navigator.userAgent);
-    if (isIPhoneChromeBackStack) {
-        pushAppNavState();
-    }
-
     switchSubject("math");
     setupFabObserver();
     updateFabSearchThreshold();
@@ -18969,6 +18958,24 @@ function printWithCleanState() {
     window.addEventListener("afterprint", restoreA11yState);
     requestAnimationFrame(() => {
         requestAnimationFrame(() => {
+            /* CriOS print-history guard:
+               Push exactly one disposable same-document entry for THIS print.
+               iPhone Chrome may silently consume one WKWebView history entry
+               when native Print Preview closes. Because this guard is always
+               the topmost entry, the loss is absorbed here regardless of the
+               current app depth (Report, Question Detail, History, etc.) and
+               regardless of how many times the user prints in one session. */
+            const isIPhoneChromePrint = /iPhone|iPod/.test(navigator.userAgent) &&
+                /CriOS\//.test(navigator.userAgent);
+
+            if (isIPhoneChromePrint) {
+                history.pushState({
+                    ...(history.state || {}),
+                    __appNav: true,
+                    __printScopedGuard: true
+                }, "");
+            }
+
             window.print();
             setTimeout(restoreA11yState, 2e3);
         });
