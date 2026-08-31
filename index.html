@@ -5277,6 +5277,72 @@
         }
     </style>
 
+
+    <!-- ONLY FIX 1: Manual History close button in dark mode -->
+    <style>
+        body.dark-mode #history-modal button[onclick="closeHistoryModal()"] {
+            color: #e8eef6 !important;
+            background: rgba(226, 232, 240, 0.12) !important;
+            border-color: rgba(226, 232, 240, 0.24) !important;
+        }
+
+        body.dark-mode #history-modal button[onclick="closeHistoryModal()"]:hover {
+            color: #ffffff !important;
+            background: rgba(226, 232, 240, 0.22) !important;
+            border-color: rgba(226, 232, 240, 0.42) !important;
+        }
+
+        /* ONLY FIX 2: iPhone visual scrollbar for the Question window.
+           This does NOT change overflow/touch/scroll mechanics. */
+        @supports (-webkit-touch-callout: none) {
+            @media (max-width: 767px) {
+                #detail-modal > div {
+                    position: relative !important;
+                }
+
+                #question-iphone-scroll-track {
+                    position: absolute;
+                    right: 3px;
+                    width: 4px;
+                    z-index: 40;
+                    border-radius: 999px;
+                    background: rgba(92, 58, 41, 0.12);
+                    pointer-events: none;
+                    opacity: 0;
+                }
+
+                #question-iphone-scroll-track.visible {
+                    opacity: 1;
+                }
+
+                #question-iphone-scroll-thumb {
+                    position: absolute;
+                    left: 0;
+                    top: 0;
+                    width: 100%;
+                    min-height: 30px;
+                    border-radius: 999px;
+                    background: rgba(92, 58, 41, 0.72);
+                    transform: translateY(0);
+                }
+
+                body.dark-mode #question-iphone-scroll-track {
+                    background: rgba(255,255,255,0.13);
+                }
+
+                body.dark-mode #question-iphone-scroll-thumb {
+                    background: rgba(226,232,240,0.72);
+                }
+            }
+        }
+
+        @media (min-width: 768px) {
+            #question-iphone-scroll-track {
+                display: none !important;
+            }
+        }
+    </style>
+
 </head>
 <body class="h-full flex flex-col justify-between text-slate-800 custom-scrollbar antialiased">
 
@@ -20348,6 +20414,93 @@ function triggerToast(text, iconClass) {
     }
 
     const thumb = document.getElementById("history-iphone-scroll-thumb");
+    let raf = 0;
+
+    function update() {
+        raf = 0;
+
+        if (window.innerWidth >= 768 || modal.classList.contains("hidden")) {
+            track.classList.remove("visible");
+            return;
+        }
+
+        const panelRect = panel.getBoundingClientRect();
+        const scrollRect = scroller.getBoundingClientRect();
+
+        const top = Math.max(0, scrollRect.top - panelRect.top);
+        const height = Math.max(0, scroller.clientHeight);
+
+        track.style.top = top + "px";
+        track.style.height = height + "px";
+
+        const maxScroll = scroller.scrollHeight - scroller.clientHeight;
+        if (maxScroll <= 2 || height <= 0) {
+            track.classList.remove("visible");
+            return;
+        }
+
+        const ratio = Math.min(1, scroller.clientHeight / scroller.scrollHeight);
+        const thumbH = Math.max(30, Math.round(height * ratio));
+        const travel = Math.max(0, height - thumbH);
+        const progress = Math.max(0, Math.min(1, scroller.scrollTop / maxScroll));
+
+        thumb.style.height = thumbH + "px";
+        thumb.style.transform = "translateY(" + Math.round(travel * progress) + "px)";
+        track.classList.add("visible");
+    }
+
+    function scheduleUpdate() {
+        if (!raf) raf = requestAnimationFrame(update);
+    }
+
+    scroller.addEventListener("scroll", scheduleUpdate, { passive: true });
+    window.addEventListener("resize", scheduleUpdate, { passive: true });
+    window.addEventListener("orientationchange", scheduleUpdate, { passive: true });
+
+    new MutationObserver(scheduleUpdate).observe(modal, {
+        attributes: true,
+        attributeFilter: ["class"]
+    });
+
+    new MutationObserver(scheduleUpdate).observe(scroller, {
+        childList: true,
+        subtree: true
+    });
+
+    scheduleUpdate();
+})();
+</script>
+
+
+<script>
+/* ONLY FIX 2 helper: visual iPhone scrollbar for the Question window.
+   Reads existing scroll position only; does not alter scrolling behavior. */
+(function initQuestionIphoneVisualScrollbar() {
+    const modal = document.getElementById("detail-modal");
+    const scroller = document.getElementById("modal-scroll-body");
+    if (!modal || !scroller) return;
+
+    const panel = modal.firstElementChild;
+    if (!panel) return;
+
+    const isIPhone = ("ontouchstart" in window) &&
+        /iPhone|iPod/.test(navigator.userAgent);
+
+    if (!isIPhone) return;
+
+    let track = document.getElementById("question-iphone-scroll-track");
+    if (!track) {
+        track = document.createElement("div");
+        track.id = "question-iphone-scroll-track";
+        track.setAttribute("aria-hidden", "true");
+
+        const thumb = document.createElement("div");
+        thumb.id = "question-iphone-scroll-thumb";
+        track.appendChild(thumb);
+        panel.appendChild(track);
+    }
+
+    const thumb = document.getElementById("question-iphone-scroll-thumb");
     let raf = 0;
 
     function update() {
