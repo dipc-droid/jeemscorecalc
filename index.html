@@ -5139,6 +5139,86 @@
         }
     </style>
 
+
+    <!-- Small-phone question modal: keep any exposed viewport area visually normal,
+         instead of applying the grey/dim modal backdrop. -->
+    <style>
+        @media (max-width: 480px) {
+            #detail-modal {
+                background: transparent !important;
+                background-color: transparent !important;
+                backdrop-filter: none !important;
+                -webkit-backdrop-filter: none !important;
+            }
+        }
+    </style>
+
+
+    <!-- Restore the final deep-brown bright-mode text ink pass only. -->
+    <style>
+        body:not(.dark-mode) :where(.text-slate-300) { color: #4a3217 !important; }
+        body:not(.dark-mode) :where(.text-slate-400) { color: #3e2812 !important; }
+        body:not(.dark-mode) :where(.text-slate-405) { color: #39230f !important; }
+        body:not(.dark-mode) :where(.text-slate-450) { color: #35200d !important; }
+        body:not(.dark-mode) :where(.text-slate-500) { color: #301c0a !important; }
+        body:not(.dark-mode) :where(.text-slate-550) { color: #2b1808 !important; }
+        body:not(.dark-mode) :where(.text-slate-600) { color: #251405 !important; }
+        body:not(.dark-mode) :where(.text-slate-605) { color: #211104 !important; }
+        body:not(.dark-mode) :where(.text-slate-700) { color: #1d0f03 !important; }
+        body:not(.dark-mode) :where(.text-slate-800) { color: #1a0d02 !important; }
+
+        body:not(.dark-mode) .dz-sub,
+        body:not(.dark-mode) .dz-privacy,
+        body:not(.dark-mode) .csel-chevron,
+        body:not(.dark-mode) #setup-view .session-card-label {
+            color: #2b1808 !important;
+        }
+    </style>
+
+
+    <!-- Mobile toast layout: fixes long messages such as the Reset Complete notice. -->
+    <style>
+        @media (max-width: 640px) {
+            #toast-banner {
+                left: 12px !important;
+                right: 12px !important;
+                bottom: max(12px, calc(env(safe-area-inset-bottom, 0px) + 10px)) !important;
+                width: auto !important;
+                max-width: none !important;
+                box-sizing: border-box !important;
+
+                padding: 14px 16px !important;
+                border-radius: 14px !important;
+
+                display: flex !important;
+                align-items: flex-start !important;
+                gap: 10px !important;
+                line-height: 1.45 !important;
+            }
+
+            /* Tailwind's space-x utility otherwise leaves an extra desktop gap. */
+            #toast-banner > :not([hidden]) ~ :not([hidden]) {
+                margin-left: 0 !important;
+            }
+
+            #toast-icon {
+                flex: 0 0 auto !important;
+                margin-top: 2px !important;
+                line-height: 1 !important;
+                animation: none !important;
+            }
+
+            #toast-banner-text {
+                display: block !important;
+                flex: 1 1 auto !important;
+                min-width: 0 !important;
+                overflow-wrap: anywhere !important;
+                word-break: normal !important;
+                text-align: left !important;
+            }
+        }
+    </style>
+
 </head>
 <body class="h-full flex flex-col justify-between text-slate-800 custom-scrollbar antialiased">
 
