@@ -17187,6 +17187,21 @@ function goBackToWorkspace(fromPopstate) {
     if (window.resetReportSlider) {
         window.resetReportSlider();
     }
+
+    /* iPhone Chrome can lose the workspace's final same-document Back entry
+       after returning from native Print Preview. Re-arm exactly one protected
+       app state here, after Report -> Workspace, so the NEXT Back reaches the
+       app and shows the existing Reset & Re-upload confirmation instead of
+       leaving the page. */
+    const isIPhoneChrome = /iPhone|iPod/.test(navigator.userAgent) &&
+        /CriOS\//.test(navigator.userAgent);
+
+    if (isIPhoneChrome) {
+        history.pushState({
+            __appNav: true,
+            __workspaceExitGuard: true
+        }, "");
+    }
 }
 
 function switchReportTab(tabType) {
@@ -18958,22 +18973,6 @@ function printWithCleanState() {
     window.addEventListener("afterprint", restoreA11yState);
     requestAnimationFrame(() => {
         requestAnimationFrame(() => {
-            /* iPhone Chrome only:
-               Native Print Preview can consume the report's usable history entry.
-               Add one temporary app-nav guard before opening Print so the sequence
-               remains Print -> Report -> Workspace -> final reset warning. */
-            const isIPhoneChrome = /iPhone|iPod/.test(navigator.userAgent) &&
-                /CriOS\//.test(navigator.userAgent);
-
-            if (isIPhoneChrome &&
-                (!history.state || !history.state.__jeePrintBackGuard)) {
-                history.pushState({
-                    ...(history.state || {}),
-                    __appNav: true,
-                    __jeePrintBackGuard: true
-                }, "");
-            }
-
             window.print();
             setTimeout(restoreA11yState, 2e3);
         });
