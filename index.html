@@ -5438,6 +5438,22 @@
         }
     </style>
 
+
+    <!-- Restore the earlier proven iPhone/mobile Question-window scroll fix.
+         Native scrolling only: no forced overflow, touch-action, sizing, or JS. -->
+    <style>
+        @media (max-width: 767px) {
+            #detail-modal > div {
+                min-height: 0 !important;
+            }
+
+            #modal-scroll-body {
+                min-height: 0 !important;
+                -webkit-overflow-scrolling: touch;
+            }
+        }
+    </style>
+
 </head>
 <body class="h-full flex flex-col justify-between text-slate-800 custom-scrollbar antialiased">
 
