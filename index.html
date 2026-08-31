@@ -16063,6 +16063,17 @@ function finishEnteringWorkspace() {
     document.getElementById("setup-view").classList.add("hidden");
     document.getElementById("workspace-view").classList.remove("hidden");
     pushAppNavState();
+
+    /* iPhone Chrome keeps one invisible spare same-document history entry.
+       Native Print Preview can consume the Report entry on return; this spare
+       ensures Report -> Workspace still leaves one final Back entry for the
+       existing "Reset and Re-upload PDF?" confirmation. */
+    const isIPhoneChromeBackStack = /iPhone|iPod/.test(navigator.userAgent) &&
+        /CriOS\//.test(navigator.userAgent);
+    if (isIPhoneChromeBackStack) {
+        pushAppNavState();
+    }
+
     switchSubject("math");
     setupFabObserver();
     updateFabSearchThreshold();
@@ -17186,21 +17197,6 @@ function goBackToWorkspace(fromPopstate) {
     updateFabSearchThreshold();
     if (window.resetReportSlider) {
         window.resetReportSlider();
-    }
-
-    /* iPhone Chrome can lose the workspace's final same-document Back entry
-       after returning from native Print Preview. Re-arm exactly one protected
-       app state here, after Report -> Workspace, so the NEXT Back reaches the
-       app and shows the existing Reset & Re-upload confirmation instead of
-       leaving the page. */
-    const isIPhoneChrome = /iPhone|iPod/.test(navigator.userAgent) &&
-        /CriOS\//.test(navigator.userAgent);
-
-    if (isIPhoneChrome) {
-        history.pushState({
-            __appNav: true,
-            __workspaceExitGuard: true
-        }, "");
     }
 }
 
