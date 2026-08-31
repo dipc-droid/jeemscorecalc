@@ -32,7 +32,7 @@
   gtag('config', 'G-4FNQR619P3');
 </script>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>JEE Main 2026 Score Calculator</title>
   <meta name="description" content="Calculate your JEE Main 2026 score instantly using your official response sheet PDF. Fast, secure, and accurate shift-wise calculation.">
 
@@ -5210,6 +5210,234 @@
                 right: max(0.65rem, env(safe-area-inset-right)) !important;
                 z-index: 20 !important;
                 margin: 0 !important;
+            }
+        }
+    </style>
+
+
+    <!-- iPhone/WebKit question-modal scroll reliability -->
+    <style>
+        @media (max-width: 767px) {
+            /* Keep the existing modal layout, but make the inner body the definite
+               vertical scroll surface on mobile WebKit. */
+            #detail-modal > div {
+                position: relative !important;
+                min-height: 0 !important;
+            }
+
+            #modal-scroll-body {
+                flex: 1 1 auto !important;
+                min-height: 0 !important;
+                overflow-y: scroll !important;
+                overflow-x: hidden !important;
+                -webkit-overflow-scrolling: touch;
+                touch-action: pan-y !important;
+                overscroll-behavior-y: contain;
+                scrollbar-gutter: stable;
+            }
+
+            /* A vertical drag over the normal question preview should scroll the
+               question window, not feel like a dead touch area. */
+            #question-preview-wrap:not(.preview-zoomed),
+            #question-preview-wrap:not(.preview-zoomed) #cropped-question-canvas {
+                touch-action: pan-y !important;
+            }
+
+            /* Do not leave the question panel as a permanently 3D-transformed
+               ancestor after its entrance animation; that is unreliable for nested
+               scrolling in iOS WebKit/Chrome. */
+            @keyframes detailModalMobileInStable {
+                from {
+                    opacity: 0;
+                    transform: translateY(8px) scale(0.985);
+                }
+                to {
+                    opacity: 1;
+                    transform: none;
+                }
+            }
+
+            #detail-modal:not(.hidden):not(.modal-closing) > div {
+                animation: detailModalMobileInStable 0.24s cubic-bezier(0.22,1,0.36,1) !important;
+                animation-fill-mode: none !important;
+                backface-visibility: visible !important;
+            }
+
+            /* Independent visual scroll indicator because iOS may auto-hide the
+               native scrollbar even while this inner element is scrollable. */
+            #modal-mobile-scroll-track {
+                position: absolute;
+                right: 3px;
+                top: 0;
+                bottom: 8px;
+                width: 4px;
+                z-index: 35;
+                border-radius: 999px;
+                background: rgba(92, 58, 41, 0.12);
+                pointer-events: none;
+                opacity: 0;
+                transition: opacity 0.15s ease;
+            }
+
+            #modal-mobile-scroll-track.visible {
+                opacity: 1;
+            }
+
+            #modal-mobile-scroll-thumb {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                min-height: 32px;
+                border-radius: 999px;
+                background: rgba(92, 58, 41, 0.72);
+                transform: translateY(0);
+                will-change: transform, height;
+            }
+
+            body.dark-mode #modal-mobile-scroll-track {
+                background: rgba(255,255,255,0.13);
+            }
+
+            body.dark-mode #modal-mobile-scroll-thumb {
+                background: rgba(226,232,240,0.72);
+            }
+        }
+
+        @media (min-width: 768px) {
+            #modal-mobile-scroll-track {
+                display: none !important;
+            }
+        }
+    </style>
+
+
+    <!-- Consolidated mobile modal compatibility hardening.
+         This does not alter scoring/navigation logic or desktop styling. -->
+    <style>
+        @media (max-width: 767px) {
+            /* HISTORY: use the same iOS-safe single-scroll-surface approach as
+               the question modal, and do not leave a 3D-transformed ancestor
+               around its nested scroller after opening. */
+            #history-modal > div {
+                min-height: 0 !important;
+                position: relative !important;
+            }
+
+            #history-list-body {
+                flex: 1 1 auto !important;
+                min-height: 0 !important;
+                overflow-y: scroll !important;
+                overflow-x: hidden !important;
+                -webkit-overflow-scrolling: touch;
+                touch-action: pan-y !important;
+                overscroll-behavior-y: contain;
+            }
+
+            @keyframes historyModalMobileInStable {
+                from {
+                    opacity: 0;
+                    transform: translateY(8px) scale(0.985);
+                }
+                to {
+                    opacity: 1;
+                    transform: none;
+                }
+            }
+
+            #history-modal:not(.hidden):not(.modal-closing) > div {
+                animation: historyModalMobileInStable 0.24s cubic-bezier(0.22,1,0.36,1) !important;
+                animation-fill-mode: none !important;
+                backface-visibility: visible !important;
+            }
+
+            /* SMALL CONFIRMATION / INFORMATION MODALS:
+               100vh is the fallback; browsers with dynamic viewport support
+               override it with 100dvh. This prevents controls falling below
+               the visible screen on older Android/Samsung/WebView browsers. */
+            #provisional-score-modal > div,
+            #finalize-confirm-modal > div,
+            #unsaved-changes-modal > div,
+            #already-unattempted-modal > div,
+            #nav-intercept-modal > div,
+            #reset-confirm-modal > div,
+            #upload-required-modal > div,
+            #session-mismatch-modal > div,
+            #year-mismatch-modal > div,
+            #confirm-back-modal > div,
+            #invalid-pdf-modal > div {
+                max-height: calc(100vh - 24px) !important;
+                overflow-y: auto !important;
+                overscroll-behavior-y: contain;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            /* Keep overlays inside iPhone safe areas without changing their
+               normal centered-card appearance. */
+            #history-modal,
+            #provisional-score-modal,
+            #finalize-confirm-modal,
+            #unsaved-changes-modal,
+            #already-unattempted-modal,
+            #nav-intercept-modal,
+            #reset-confirm-modal,
+            #upload-required-modal,
+            #session-mismatch-modal,
+            #year-mismatch-modal,
+            #confirm-back-modal,
+            #invalid-pdf-modal {
+                padding-left: max(12px, env(safe-area-inset-left)) !important;
+                padding-right: max(12px, env(safe-area-inset-right)) !important;
+                padding-top: max(12px, env(safe-area-inset-top)) !important;
+                padding-bottom: max(12px, env(safe-area-inset-bottom)) !important;
+            }
+        }
+
+        @supports (height: 100dvh) {
+            @media (max-width: 767px) {
+                #provisional-score-modal > div,
+                #finalize-confirm-modal > div,
+                #unsaved-changes-modal > div,
+                #already-unattempted-modal > div,
+                #nav-intercept-modal > div,
+                #reset-confirm-modal > div,
+                #upload-required-modal > div,
+                #session-mismatch-modal > div,
+                #year-mismatch-modal > div,
+                #confirm-back-modal > div,
+                #invalid-pdf-modal > div {
+                    max-height: calc(100dvh - 24px) !important;
+                }
+            }
+        }
+
+        /* Very narrow phones: prevent the Question header controls from
+           competing for width while preserving the same order and appearance. */
+        @media (max-width: 340px) {
+            #detail-modal > div > :first-child {
+                padding-right: 3.55rem !important;
+            }
+
+            #detail-modal > div > :first-child > div:last-child {
+                gap: 8px !important;
+            }
+
+            #detail-modal button[onclick="showPreviousQuestion()"],
+            #detail-modal button[onclick="showNextQuestion()"] {
+                padding-left: 0.68rem !important;
+                padding-right: 0.68rem !important;
+            }
+
+            #detail-modal button[onclick="viewScoreAnalysisFromModal()"] {
+                padding-left: 0.68rem !important;
+                padding-right: 0.68rem !important;
+                gap: 4px !important;
+            }
+
+            #detail-modal .qw-analysis-label {
+                font-size: 9px !important;
+                max-width: 70px;
+                line-height: 1.1 !important;
             }
         }
     </style>
@@ -20253,5 +20481,165 @@ function triggerToast(text, iconClass) {
     }
   };
 </script>
+
+<script>
+/* Isolated mobile question-modal scroll indicator.
+   Does not alter scoring, navigation, modal open/close logic, or answer handling. */
+(function initMobileQuestionScrollIndicator() {
+    const modal = document.getElementById("detail-modal");
+    const scroller = document.getElementById("modal-scroll-body");
+    if (!modal || !scroller) return;
+
+    const panel = modal.firstElementChild;
+    const header = panel ? panel.firstElementChild : null;
+    if (!panel || !header) return;
+
+    let track = document.getElementById("modal-mobile-scroll-track");
+    if (!track) {
+        track = document.createElement("div");
+        track.id = "modal-mobile-scroll-track";
+        track.setAttribute("aria-hidden", "true");
+
+        const thumb = document.createElement("div");
+        thumb.id = "modal-mobile-scroll-thumb";
+        track.appendChild(thumb);
+        panel.appendChild(track);
+    }
+
+    const thumb = document.getElementById("modal-mobile-scroll-thumb");
+    let raf = 0;
+
+    function update() {
+        raf = 0;
+
+        if (window.innerWidth >= 768 || modal.classList.contains("hidden")) {
+            track.classList.remove("visible");
+            return;
+        }
+
+        const headerH = Math.ceil(header.getBoundingClientRect().height);
+        track.style.top = (headerH + 6) + "px";
+
+        const maxScroll = scroller.scrollHeight - scroller.clientHeight;
+        if (maxScroll <= 2) {
+            track.classList.remove("visible");
+            return;
+        }
+
+        const trackH = Math.max(1, track.clientHeight);
+        const ratio = Math.min(1, scroller.clientHeight / scroller.scrollHeight);
+        const thumbH = Math.max(32, Math.round(trackH * ratio));
+        const travel = Math.max(0, trackH - thumbH);
+        const progress = Math.max(0, Math.min(1, scroller.scrollTop / maxScroll));
+
+        thumb.style.height = thumbH + "px";
+        thumb.style.transform = "translateY(" + Math.round(travel * progress) + "px)";
+        track.classList.add("visible");
+    }
+
+    function scheduleUpdate() {
+        if (!raf) raf = requestAnimationFrame(update);
+    }
+
+    scroller.addEventListener("scroll", scheduleUpdate, { passive: true });
+    window.addEventListener("resize", scheduleUpdate, { passive: true });
+    window.addEventListener("orientationchange", scheduleUpdate, { passive: true });
+
+    new MutationObserver(scheduleUpdate).observe(modal, {
+        attributes: true,
+        attributeFilter: ["class"]
+    });
+
+    if (window.ResizeObserver) {
+        const ro = new ResizeObserver(scheduleUpdate);
+        ro.observe(scroller);
+        ro.observe(header);
+    }
+
+    scheduleUpdate();
+})();
+</script>
+
+
+<script>
+/* Mobile compatibility helper:
+   - keeps the integer answer visible when the on-screen keyboard changes the
+     iPhone/Android visual viewport;
+   - recovers body scrolling if the provisional-score popup is exited through
+     browser navigation instead of its normal dismiss button.
+   It intentionally does not change scoring, answer, or app-navigation logic. */
+(function initMobileModalCompatibility() {
+    const detailModal = document.getElementById("detail-modal");
+    const integerInput = document.getElementById("integer-marked-val");
+    const provisionalModal = document.getElementById("provisional-score-modal");
+    const zoomModal = document.getElementById("qzoom-modal");
+
+    let revealTimer = 0;
+
+    function revealIntegerInput() {
+        if (!integerInput || !detailModal) return;
+        if (document.activeElement !== integerInput) return;
+        if (detailModal.classList.contains("hidden")) return;
+
+        clearTimeout(revealTimer);
+        revealTimer = window.setTimeout(function() {
+            try {
+                integerInput.scrollIntoView({
+                    block: "center",
+                    inline: "nearest",
+                    behavior: "auto"
+                });
+            } catch (e) {
+                integerInput.scrollIntoView(false);
+            }
+        }, 90);
+    }
+
+    if (integerInput) {
+        integerInput.addEventListener("focus", revealIntegerInput, { passive: true });
+    }
+
+    if (window.visualViewport) {
+        window.visualViewport.addEventListener("resize", revealIntegerInput, { passive: true });
+        window.visualViewport.addEventListener("scroll", revealIntegerInput, { passive: true });
+    }
+
+    function provisionalIsOpen() {
+        return provisionalModal && !provisionalModal.classList.contains("hidden");
+    }
+
+    function zoomIsOpen() {
+        return zoomModal && zoomModal.classList.contains("open");
+    }
+
+    function recoverBodyScrollIfSafe() {
+        if (!provisionalIsOpen() && !zoomIsOpen() && document.body.style.overflow === "hidden") {
+            document.body.style.overflow = "";
+        }
+    }
+
+    /* If browser Back/navigation occurs while the provisional popup is open,
+       remove the stale overlay and restore scrolling. */
+    window.addEventListener("popstate", function() {
+        if (provisionalIsOpen()) {
+            provisionalModal.classList.add("hidden");
+            document.querySelectorAll(".fab-btn, #fab-container, #fab-group").forEach(function(el) {
+                el.style.removeProperty("display");
+            });
+        }
+        recoverBodyScrollIfSafe();
+    }, { passive: true });
+
+    window.addEventListener("pageshow", recoverBodyScrollIfSafe, { passive: true });
+
+    if (provisionalModal && window.MutationObserver) {
+        new MutationObserver(recoverBodyScrollIfSafe).observe(provisionalModal, {
+            attributes: true,
+            attributeFilter: ["class"]
+        });
+    }
+})();
+</script>
+
 </body>
 </html>
