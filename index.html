@@ -5343,6 +5343,98 @@
         }
     </style>
 
+
+    <!-- iPhone/mobile Reset & Re-upload warning visibility only. -->
+    <style>
+        @media (max-width: 767px) {
+            #confirm-back-modal:not(.hidden) {
+                display: flex !important;
+                position: fixed !important;
+                inset: 0 !important;
+                z-index: 120 !important;
+            }
+
+            #confirm-back-modal > div {
+                max-height: calc(100vh - 24px);
+                overflow-y: auto;
+            }
+        }
+
+        @supports (height: 100dvh) {
+            @media (max-width: 767px) {
+                #confirm-back-modal > div {
+                    max-height: calc(100dvh - 24px);
+                }
+            }
+        }
+    </style>
+
+
+    <!-- Visual restoration only: warm hero animation + refined bright-mode borders. -->
+    <style>
+        /* Restore the earlier warm-brown animated hero glow on desktop/bright mode.
+           Keep the existing sizes/positions so it cannot reintroduce the disclaimer haze. */
+        body:not(.dark-mode) .blob {
+            opacity: 0.28;
+        }
+        body:not(.dark-mode) .blob-1 {
+            background: radial-gradient(circle at 30% 30%, #b98b52, transparent 70%) !important;
+        }
+        body:not(.dark-mode) .blob-2 {
+            background: radial-gradient(circle at 30% 30%, #c9a16f, transparent 70%) !important;
+        }
+        body:not(.dark-mode) .blob-3 {
+            background: radial-gradient(circle at 30% 30%, #dbc09a, transparent 70%) !important;
+        }
+
+        /* Restore the cleaner warm-brown border hierarchy from the updated look. */
+        body:not(.dark-mode) :where(.border-slate-100) {
+            border-color: rgba(120, 96, 58, 0.14) !important;
+        }
+        body:not(.dark-mode) :where(.border-slate-150) {
+            border-color: rgba(120, 96, 58, 0.18) !important;
+        }
+        body:not(.dark-mode) :where(.border-slate-200),
+        body:not(.dark-mode) :where(.border-slate-200\/80),
+        body:not(.dark-mode) :where(.border-slate-200\/70),
+        body:not(.dark-mode) :where(.border-slate-200\/60) {
+            border-color: rgba(120, 96, 58, 0.22) !important;
+        }
+        body:not(.dark-mode) :where(.border-slate-250) {
+            border-color: rgba(120, 96, 58, 0.27) !important;
+        }
+        body:not(.dark-mode) :where(.border-slate-300),
+        body:not(.dark-mode) :where(.border-slate-300\/70) {
+            border-color: rgba(120, 96, 58, 0.32) !important;
+        }
+        body:not(.dark-mode) :where(.border-slate-400) {
+            border-color: rgba(120, 96, 58, 0.42) !important;
+        }
+        body:not(.dark-mode) :where(.border-slate-450) {
+            border-color: rgba(94, 68, 36, 0.48) !important;
+        }
+
+        body:not(.dark-mode) :where(.divide-slate-100) > :not([hidden]) ~ :not([hidden]) {
+            border-color: rgba(120, 96, 58, 0.14) !important;
+        }
+        body:not(.dark-mode) :where(.divide-slate-200) > :not([hidden]) ~ :not([hidden]) {
+            border-color: rgba(120, 96, 58, 0.22) !important;
+        }
+
+        body:not(.dark-mode) .glass {
+            border-color: rgba(120, 96, 58, 0.26) !important;
+        }
+        body:not(.dark-mode) .glass-panel {
+            border-color: rgba(94, 68, 36, 0.38) !important;
+            box-shadow:
+                0 10px 30px -12px rgba(58, 42, 22, 0.16),
+                0 1px 0 rgba(255, 252, 244, 0.78) inset !important;
+        }
+        body:not(.dark-mode) .glass-soft {
+            border-color: rgba(120, 96, 58, 0.28) !important;
+        }
+    </style>
+
 </head>
 <body class="h-full flex flex-col justify-between text-slate-800 custom-scrollbar antialiased">
 
@@ -20555,6 +20647,43 @@ function triggerToast(text, iconClass) {
     });
 
     scheduleUpdate();
+})();
+</script>
+
+
+<script>
+/* iPhone Back-gesture safeguard for "Reset and Re-upload PDF?" only.
+   It does not alter scoring, question/history scrolling, or other modal logic. */
+(function initIphoneResetWarningSafeguard() {
+    const isIPhone = ("ontouchstart" in window) &&
+        /iPhone|iPod/.test(navigator.userAgent);
+
+    if (!isIPhone) return;
+
+    window.addEventListener("popstate", function() {
+        window.setTimeout(function() {
+            const workspace = document.getElementById("workspace-view");
+            const confirmModal = document.getElementById("confirm-back-modal");
+            const provisional = document.getElementById("provisional-score-modal");
+
+            if (!workspace || workspace.classList.contains("hidden") || !confirmModal) {
+                return;
+            }
+
+            /* iOS can retain this overlay/body lock for a frame during Back. */
+            if (provisional && !provisional.classList.contains("hidden")) {
+                provisional.classList.add("hidden");
+                document.body.style.overflow = "";
+                document.querySelectorAll(".fab-btn, #fab-container, #fab-group").forEach(function(el) {
+                    el.style.removeProperty("display");
+                });
+            }
+
+            /* The existing app popstate handler requests this warning.
+               Reassert visibility after iOS finishes its Back transition. */
+            confirmModal.classList.remove("hidden");
+        }, 0);
+    }, { passive: true });
 })();
 </script>
 
