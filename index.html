@@ -5083,6 +5083,62 @@
         }
     </style>
 
+
+    <!-- Mobile question modal scroll stability: keep one vertical scroll surface and
+         avoid transformed ancestors that break touch scrolling on Safari/Android. -->
+    <style>
+        @media (max-width: 767px) {
+            /* A 3D-transformed modal ancestor can make nested overflow scrolling
+               unreliable on mobile browsers even after the entrance animation ends. */
+            #detail-modal:not(.hidden) > div,
+            #detail-modal.modal-closing > div {
+                animation: none !important;
+                transform: none !important;
+                perspective: none !important;
+                backface-visibility: visible !important;
+            }
+
+            #detail-modal > div {
+                display: flex !important;
+                flex-direction: column !important;
+                min-height: 0 !important;
+                overflow: hidden !important;
+            }
+
+            #detail-modal > div > :first-child,
+            #detail-modal > div > :last-child {
+                flex: 0 0 auto !important;
+                min-height: 0 !important;
+            }
+
+            #modal-scroll-body {
+                flex: 1 1 0% !important;
+                min-height: 0 !important;
+                max-height: none !important;
+                overflow-y: auto !important;
+                overflow-x: hidden !important;
+                -webkit-overflow-scrolling: touch !important;
+                overscroll-behavior-y: contain;
+                touch-action: pan-y !important;
+                position: relative;
+            }
+
+            /* Swiping vertically on the question image should scroll the modal,
+               rather than feeling like the page has become stuck. */
+            #question-preview-wrap:not(.preview-zoomed),
+            #question-preview-wrap:not(.preview-zoomed) #cropped-question-canvas {
+                touch-action: pan-y !important;
+            }
+
+            /* When preview zoom is active it remains independently pannable, but
+               scrolling can hand back to the modal at its edges where supported. */
+            #question-preview-wrap.preview-zoomed {
+                -webkit-overflow-scrolling: touch !important;
+                overscroll-behavior: auto !important;
+            }
+        }
+    </style>
+
 </head>
 <body class="h-full flex flex-col justify-between text-slate-800 custom-scrollbar antialiased">
 
@@ -5945,16 +6001,25 @@
            comfortably on iPhone-sized screens. */
         @media (max-width: 480px) {
             #detail-modal {
+                inset: 0 !important;
                 padding: 10px !important;
                 align-items: center !important;
                 justify-content: center !important;
                 width: 100vw !important;
+                width: 100% !important;
+                /* Fallback for older iOS/Android browsers that ignore dvh. */
+                height: 100vh !important;
+                min-height: 100vh !important;
+                /* Modern mobile browsers use the live visual viewport. */
                 height: 100dvh !important;
                 min-height: 100dvh !important;
             }
             #detail-modal > div {
                 width: 100% !important;
                 max-width: none !important;
+                /* Keep the intended 10px border gap even when dvh is unsupported. */
+                height: calc(100vh - 20px) !important;
+                max-height: calc(100vh - 20px) !important;
                 height: calc(100dvh - 20px) !important;
                 max-height: calc(100dvh - 20px) !important;
                 min-height: 0 !important;
