@@ -18958,6 +18958,22 @@ function printWithCleanState() {
     window.addEventListener("afterprint", restoreA11yState);
     requestAnimationFrame(() => {
         requestAnimationFrame(() => {
+            /* iPhone Chrome only:
+               Native Print Preview can consume the report's usable history entry.
+               Add one temporary app-nav guard before opening Print so the sequence
+               remains Print -> Report -> Workspace -> final reset warning. */
+            const isIPhoneChrome = /iPhone|iPod/.test(navigator.userAgent) &&
+                /CriOS\//.test(navigator.userAgent);
+
+            if (isIPhoneChrome &&
+                (!history.state || !history.state.__jeePrintBackGuard)) {
+                history.pushState({
+                    ...(history.state || {}),
+                    __appNav: true,
+                    __jeePrintBackGuard: true
+                }, "");
+            }
+
             window.print();
             setTimeout(restoreA11yState, 2e3);
         });
