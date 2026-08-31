@@ -937,6 +937,7 @@
         #fab-search  { bottom: 28px; }
         #fab-top     { bottom: 90px; }
         #fab-subject { bottom: 152px; }
+        #fab-history { bottom: 214px; }
 
         #cropped-question-canvas {
             transform-origin: center top;
@@ -1745,10 +1746,12 @@
             #fab-search  { bottom: 78px; right: 16px; }
             #fab-top     { bottom: 140px; right: 16px; }
             #fab-subject { bottom: 202px; right: 16px; }
+            #fab-history { bottom: 264px; right: 16px; }
 
             body.a11y-tray-open #fab-search  { bottom: 220px; }
             body.a11y-tray-open #fab-top     { bottom: 282px; }
             body.a11y-tray-open #fab-subject { bottom: 344px; }
+            body.a11y-tray-open #fab-history { bottom: 406px; }
         }
 
         #fab-subject-tray {
@@ -5510,6 +5513,10 @@
 
     <button id="fab-subject" class="fab-btn no-print" onclick="fabToggleSubjectTray()" aria-label="Switch subject" aria-expanded="false" title="Switch Subject">
         <i class="fa-solid fa-layer-group"></i>
+    </button>
+
+    <button id="fab-history" class="fab-btn no-print" onclick="openHistoryModal()" aria-label="Open Manual Answer Change History" title="Manual Answer Change History">
+        <i class="fa-solid fa-clock-rotate-left"></i>
     </button>
 
     <div id="fab-subject-tray" class="no-print" role="menu" aria-label="Choose subject or view report">
@@ -19763,6 +19770,7 @@ function setupFabObserver() {
     setTimeout(updateFabSearchThreshold, 200);
     const fabTop = document.getElementById("fab-top");
     const fabSubject = document.getElementById("fab-subject");
+    const fabHistory = document.getElementById("fab-history");
     fabScrollHandler = function() {
         const workspaceHidden = document.getElementById("workspace-view").classList.contains("hidden");
         if (workspaceHidden) {
@@ -19773,6 +19781,9 @@ function setupFabObserver() {
             if (fabSubject) {
                 fabSubject.classList.remove("visible");
             }
+            if (fabHistory) {
+                fabHistory.classList.remove("visible");
+            }
             return;
         }
         const shouldShow = window.scrollY > fabSearchThreshold;
@@ -19782,6 +19793,9 @@ function setupFabObserver() {
         }
         if (fabSubject) {
             fabSubject.classList.toggle("visible", shouldShow);
+        }
+        if (fabHistory) {
+            fabHistory.classList.toggle("visible", shouldShow);
         }
     };
     window.addEventListener("scroll", fabScrollHandler, {
@@ -19914,7 +19928,7 @@ document.addEventListener("click", function(e) {
 });
 
 function _hideFab() {
-    [ "fab-search", "fab-top", "fab-subject" ].forEach(id => {
+    [ "fab-search", "fab-top", "fab-subject", "fab-history" ].forEach(id => {
         const el = document.getElementById(id);
         if (el) {
             el.classList.remove("visible");
@@ -20649,43 +20663,5 @@ function triggerToast(text, iconClass) {
     scheduleUpdate();
 })();
 </script>
-
-
-<script>
-/* iPhone Back-gesture safeguard for "Reset and Re-upload PDF?" only.
-   It does not alter scoring, question/history scrolling, or other modal logic. */
-(function initIphoneResetWarningSafeguard() {
-    const isIPhone = ("ontouchstart" in window) &&
-        /iPhone|iPod/.test(navigator.userAgent);
-
-    if (!isIPhone) return;
-
-    window.addEventListener("popstate", function() {
-        window.setTimeout(function() {
-            const workspace = document.getElementById("workspace-view");
-            const confirmModal = document.getElementById("confirm-back-modal");
-            const provisional = document.getElementById("provisional-score-modal");
-
-            if (!workspace || workspace.classList.contains("hidden") || !confirmModal) {
-                return;
-            }
-
-            /* iOS can retain this overlay/body lock for a frame during Back. */
-            if (provisional && !provisional.classList.contains("hidden")) {
-                provisional.classList.add("hidden");
-                document.body.style.overflow = "";
-                document.querySelectorAll(".fab-btn, #fab-container, #fab-group").forEach(function(el) {
-                    el.style.removeProperty("display");
-                });
-            }
-
-            /* The existing app popstate handler requests this warning.
-               Reassert visibility after iOS finishes its Back transition. */
-            confirmModal.classList.remove("hidden");
-        }, 0);
-    }, { passive: true });
-})();
-</script>
-
 </body>
 </html>
